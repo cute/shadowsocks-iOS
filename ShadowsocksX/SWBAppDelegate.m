@@ -11,11 +11,19 @@
 #import "SWBAppDelegate.h"
 #import "GCDWebServer.h"
 #import "ShadowsocksRunner.h"
+#import "MMPDeepSleepPreventer.h"
 
 #define kShadowsocksIsRunningKey @"ShadowsocksIsRunning"
 #define kShadowsocksRunningModeKey @"ShadowsocksMode"
 #define kShadowsocksHelper @"/Library/Application Support/ShadowsocksX/shadowsocks_sysconf"
 #define kSysconfVersion @"1.0.0"
+
+@interface SWBAppDelegate ()
+
+@property (nonatomic, strong) MMPDeepSleepPreventer *sleepPreventer;
+@property (nonatomic, assign) UIBackgroundTaskIdentifier bgTaskID;
+
+@end
 
 @implementation SWBAppDelegate {
     SWBConfigWindowController *configWindowController;
@@ -29,12 +37,21 @@
     FSEventStreamRef fsEventStream;
     NSString *configPath;
     NSString *PACPath;
+    
 }
 
 static SWBAppDelegate *appDelegate;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+    // prevent sleep
+    self.sleepPreventer = [[MMPDeepSleepPreventer alloc] init];
+    self.bgTaskID = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+        [[UIApplication sharedApplication] endBackgroundTask:self.bgTaskID];
+        self.bgTaskID = UIBackgroundTaskInvalid;
+    }];
+    
     [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self andSelector:@selector(handleURLEvent:withReplyEvent:) forEventClass:kInternetEventClass andEventID:kAEGetURL];
+    
 
     // Insert code here to initialize your application
     dispatch_queue_t proxy = dispatch_queue_create("proxy", NULL);
@@ -91,6 +108,16 @@ static SWBAppDelegate *appDelegate;
     PACPath = [NSString stringWithFormat:@"%@/%@", configPath, @"gfwlist.js"];
     [self monitorPAC:configPath];
     appDelegate = self;
+}
+
+- (void)applicationDidEnterBackground:(UIApplication *)application
+{
+    [self.sleepPreventer startPreventSleep];
+}
+
+- (void)applicationWillEnterForeground:(UIApplication *)application
+{
+    [self.sleepPreventer stopPreventSleep];
 }
 
 - (NSData *)PACData {

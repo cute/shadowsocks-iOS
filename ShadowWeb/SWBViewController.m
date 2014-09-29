@@ -17,7 +17,6 @@
 #define kAboutBlank @"shadowweb:blank"
 
 @interface SWBViewController () {
-    AVAudioPlayer *player;
     UIPopoverController *settingsPC;
     UIBarButtonItem *actionBarButton;
 }
@@ -333,7 +332,7 @@
         settingsController.myPopoverController = settingsPC;
         CGRect newTabRect = [self.tabBar aNewTabButton].frame;
         newTabRect.size.width = newTabRect.size.height;
-        CGRect rect = [self.tabBar convertRect:newTabRect toView:self.view];
+//        CGRect rect = [self.tabBar convertRect:newTabRect toView:self.view];
 //        [settingsPC presentPopoverFromRect:rect inView:self.view permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
         [settingsPC presentPopoverFromBarButtonItem:actionBarButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
     } else {
@@ -352,7 +351,7 @@
         settingsController.myPopoverController = settingsPC;
         CGRect newTabRect = [self.tabBar aNewTabButton].frame;
         newTabRect.size.width = newTabRect.size.height;
-        CGRect rect = [self.tabBar convertRect:newTabRect toView:self.view];
+//        CGRect rect = [self.tabBar convertRect:newTabRect toView:self.view];
 //        [settingsPC presentPopoverFromRect:rect inView:self.view permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
         [settingsPC presentPopoverFromBarButtonItem:actionBarButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
     } else {
@@ -396,7 +395,7 @@
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
         CGRect newTabRect = [self.tabBar aNewTabButton].frame;
         newTabRect.size.width = newTabRect.size.height;
-        CGRect rect = [self.tabBar convertRect:newTabRect toView:self.view];
+//        CGRect rect = [self.tabBar convertRect:newTabRect toView:self.view];
 //        [self.actionSheet showFromRect:rect inView:self.view animated:YES];
         [self.actionSheet showFromBarButtonItem:actionBarButton animated:YES];
     } else {
@@ -590,42 +589,5 @@
 //    [self hideCancelButton];
 }
 
-#pragma mark audio
-
-- (BOOL)canBecomeFirstResponder {
-    return YES;
-}
-
-- (void)play {
-
-    // Play music, so app can run in the backgound.
-    AVAudioSession *session = [AVAudioSession sharedInstance];
-    [session setActive:YES error:nil];
-    [session setCategory:AVAudioSessionCategoryPlayback error:nil];
-
-    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
-    NSURL *url = [[NSBundle mainBundle] URLForResource:@"silence" withExtension:@"wav"];
-
-    player = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:nil];
-    [player prepareToPlay];
-    [player setVolume:0];
-    player.numberOfLoops = -1;
-    [player play];
-    [self becomeFirstResponder];
-}
-
-
-- (void)remoteControlReceivedWithEvent:(UIEvent *)event {
-    switch (event.subtype) {
-        case UIEventSubtypeRemoteControlPlay:
-            [player play];
-            break;
-        case UIEventSubtypeRemoteControlPause:
-            [player pause];
-            break;
-        default:
-            break;
-    }
-}
 
 @end
