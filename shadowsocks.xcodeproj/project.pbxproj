@@ -973,6 +973,13 @@
 				LastUpgradeCheck = 0460;
 				ORGANIZATIONNAME = clowwindy;
 				TargetAttributes = {
+					621571A416CF6BCB003D96B4 = {
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
+					};
 					627A6DF618B47E9300493BBC = {
 						DevelopmentTeam = LND7PS23X9;
 					};
