@@ -14,11 +14,19 @@
 #import "GCDWebServer.h"
 #import "SWBViewController.h"
 #import "ShadowsocksRunner.h"
+#import "MMPDeepSleepPreventer.h"
 
 #define kProxyModeKey @"proxy mode"
 
 int polipo_main(int argc, char **argv);
 void polipo_exit();
+
+@interface SWBAppDelegate ()
+
+@property (nonatomic, strong) MMPDeepSleepPreventer *sleepPreventer;
+@property (nonatomic, assign) UIBackgroundTaskIdentifier bgTaskID;
+
+@end
 
 @implementation SWBAppDelegate {
     BOOL polipoRunning;
@@ -39,12 +47,14 @@ void polipo_exit();
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     [self updateProxyMode];
-
     [Crashlytics startWithAPIKey:@"fa65e4ab45ef1c9c69682529bee0751cd22d5d80"];
-
-    [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
-
+    
+    self.sleepPreventer = [[MMPDeepSleepPreventer alloc] init];
+    self.bgTaskID = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+        [[UIApplication sharedApplication] endBackgroundTask:self.bgTaskID];
+        self.bgTaskID = UIBackgroundTaskInvalid;
     }];
+    
     polipoEnabled = YES;
     dispatch_queue_t proxy = dispatch_queue_create("proxy", NULL);
     dispatch_async(proxy, ^{
@@ -122,10 +132,12 @@ void polipo_exit();
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later. 
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
     [((SWBViewController *) self.window.rootViewController) saveData];
+    [self.sleepPreventer startPreventSleep];
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
+    [self.sleepPreventer stopPreventSleep];
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
